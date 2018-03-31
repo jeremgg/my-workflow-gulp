@@ -16,21 +16,16 @@ var pkg = require('./package.json');
 //COPY FILES FROM NODE_MODULES
 gulp.task('copy', function() {
     gulp.src([
-        'node_modules/bootstrap/dist/js/bootstrap.js',
-        'node_modules/bootstrap/dist/js/bootstrap.bundle.js'
+        'node_modules/bootstrap/dist/js/bootstrap.min.js',
+        'node_modules/jquery/dist/jquery.min.js',
+        'node_modules/jquery.easing/jquery.easing.min.js'
     ])
-    .pipe(gulp.dest('dev/js/vendor/bootstrap'))
+    .pipe(gulp.dest('dev/js/vendor'))
 
     gulp.src([
         'node_modules/bootstrap/scss/**/*.scss'
     ])
     .pipe(gulp.dest('dev/scss/bootstrap'))
-
-    gulp.src([
-        'node_modules/jquery/dist/jquery.js',
-        'node_modules/jquery/dist/jquery.slim.js'
-    ])
-    .pipe(gulp.dest('dev/js/vendor/jquery'))
 
     gulp.src([
         './node_modules/font-awesome/**/*',
@@ -49,7 +44,7 @@ gulp.task('copy', function() {
 //HEADER CONTENT FILES
 var banner = ['/*!\n',
     ' * workflow-gulp - <%= pkg.title %> v<%= pkg.version %> (<%= pkg.homepage %>)\n',
-    ' */\n',
+    ' */\n\n',
     ''
 ].join('');
 
@@ -95,6 +90,18 @@ gulp.task('css', function(){
 
 
 
+//ADD HEADER TO JS FILE
+gulp.task('js', function(){
+    return gulp.src('dev/js/*.js')
+      .pipe(header(banner, {
+            pkg: pkg
+      }))
+      .pipe(gulp.dest('dev/js'))
+});
+
+
+
+
 //DELETE UNNECESSARY FILES
 gulp.task('clean', function () {
     return del('dist');
@@ -104,7 +111,7 @@ gulp.task('clean', function () {
 
 
 //GENERATE DIST FOLDER
-gulp.task('default', [ 'copy', 'csscomb', 'css', 'lib', 'clean' ], function(){
+gulp.task('default', [ 'copy', 'csscomb', 'lib', 'css', 'js', 'clean' ], function(){
     gulp.src('dev/img/**/*')
       .pipe(imagemin())
       .pipe(gulp.dest('dist/img'))
@@ -112,11 +119,12 @@ gulp.task('default', [ 'copy', 'csscomb', 'css', 'lib', 'clean' ], function(){
     gulp.src('dev/fonts/**')
         .pipe(gulp.dest('dist/fonts'))
 
-    gulp.src('dev/js/**')
-        .pipe(gulp.dest('dist/js'))
+    gulp.src('dev/js/vendor/**')
+        .pipe(gulp.dest('dist/js/vendor'))
 
     gulp.src('dev/*.html')
         .pipe(useref())
+        .pipe(gulpif('*.js', uglify()))
         .pipe(gulpif('*.css', minifyCss()))
         .pipe(gulp.dest('dist'));
 });
